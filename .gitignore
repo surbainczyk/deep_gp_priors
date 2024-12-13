@@ -1,0 +1,25 @@
+# Byte-compiled files
+__pycache__/
+
+# VS Code files
+.vscode/
+.devcontainer/
+
+# Possible outputs
+*.png
+*.jpg
+*.pdf
+*.csv
+*.npz
+*.log
+*.pickle
+*.txt
+
+# Profiling/job submission outputs
+*.prof
+*.out
+*.error
+*.output
+
+# Local submit scripts
+submit_all*
