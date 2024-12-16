@@ -1,14 +1,14 @@
 import sys
 
-from pCN_det_free_2D_rational.tol_comparison import run_tol_experiment
+from tol_comparison import run_tol_experiment
 
-from pCN_det_free_2D_rational.GP_models.DeepGP import DeepGP
-from pCN_det_free_2D_rational.pCNDetFreeSampler import pCNDetFreeSampler
-from pCN_det_free_2D_rational.interp_circle.parameters import parameters
+from pCN_det_free_fractional.GP_models.DeepGP import DeepGP
+from pCN_det_free_fractional.pCNDetFreeSampler import pCNDetFreeSampler
+from examples.interp_circle_square.parameters import parameters
 
 
-# Script for comparing performance for different values of alpha
-plots_dir = "pCN_det_free_2D_rational/interp_circle/plots_tol/"
+# Script for comparing performance for different tolerance values in LSQR solver
+plots_dir = "examples/interp_circle_square/plots_tol/"
 
 tol = float(sys.argv[1])
 id_no = int(sys.argv[2])

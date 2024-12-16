@@ -5,8 +5,8 @@ import numpy as np
 from datetime import datetime
 from skimage.metrics import mean_squared_error, peak_signal_noise_ratio, structural_similarity
 
-from MCMC_2D_fractional_op.forward_operators import apply_forward_operator
-from MCMC_2D_fractional_op.plotting import plot_tol_comparison_result
+from forward_operators import apply_forward_operator
+from plotting import plot_tol_comparison_result
 
 
 def plot_from_tol_results(tol_vals, plots_dir):
@@ -88,6 +88,7 @@ def run_tol_experiment(mcmc_solver, parameters, tol, id_no, plots_dir):
     print("Postprocessing...")
     if not os.path.isdir(plots_dir):
         os.mkdir(plots_dir)
+    
     compute_and_save_errors(mcmc_solver, true_img, scale, shift, plots_dir + f"ind_result_tol_{tol:.0e}_{id_no}.pickle")
 
     print("Finished. The time is:")
