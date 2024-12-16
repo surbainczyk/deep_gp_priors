@@ -33,7 +33,7 @@ parameters = {"n_dof": n_dof,
 
               "rho_vals": [r * 0.005 for r in range(2, 6)] + [r * 0.01 for r in range(3, 21)],
 
-              "its": int(4e4),
+              "its": int(2e4),
               "burn_in": int(1e4),
               "fix_precond": 100,
               "plot_obs": False,
