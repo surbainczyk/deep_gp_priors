@@ -8,7 +8,6 @@ plt.rc('axes',  labelsize=18)
 plt.rc('xtick', labelsize=16) 
 plt.rc('ytick', labelsize=16)
 plt.rc('legend', fontsize=16)
-plt.rc('text', usetex=True)
 
 
 def matern_kernel(r, nu, rho):

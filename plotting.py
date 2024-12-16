@@ -11,7 +11,6 @@ plt.rc('axes',  labelsize=18)
 plt.rc('xtick', labelsize=16) 
 plt.rc('ytick', labelsize=16)
 plt.rc('legend', fontsize=16)
-plt.rc('text', usetex=True)
 
 
 def save_flattened_image(img, save_as, shape=None, figsize=None, vrange=None, ticks_off=False, cbar_ticks=None, plot_cbar_to=None):
