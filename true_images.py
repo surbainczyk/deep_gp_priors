@@ -27,6 +27,18 @@ def square_and_circle(n_dof):
     return flattened_img
 
 
+def step_function(n_dof):
+    n_side = int(np.sqrt(n_dof))
+    domain_1d = np.linspace(0, 1, n_side)
+    x, y = np.meshgrid(domain_1d, domain_1d)
+
+    f = np.logical_and(x > -.1, x < 0.5) * np.logical_and(y > -.1, y < 0.5)    # upper left square
+    f = f + 0.5 * ((x + y) > 1.5)    # lower right triangle
+    f_values = f.flatten().astype(float)
+    
+    return f_values
+
+
 def eval_test_function(f_handle, x, y, shift_x, shift_y, scale=1):
     shifted_x = x - shift_x
     shifted_y = y - shift_y
