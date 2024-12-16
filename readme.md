@@ -1,12 +1,12 @@
-## Deep Gaussian Process Priors for Bayesian Image Reconstruction
+# Deep Gaussian Process Priors for Bayesian Image Reconstruction
 
 This repository contains code to run the experiments in our preprint at https://arxiv.org/abs/2412.10248.
 
 The dependencies can be installed with
 ```
-conda install -c conda-forge python=3.11 numpy=1.24 fenics matplotlib pandas scikit-sparse sparse_dot_mkl=0.9 numba progressbar2 threadpoolctl
-pip install scikit-image
+conda install -c conda-forge python=3.11 numpy=1.24 fenics numba sparse_dot_mkl=0.9 matplotlib pandas scikit-sparse progressbar2 scikit-image
 ```
+The install can take some time, so it might make sense to split this list into chunks. The version numbers ensure compatibility of the Python packages.
 
 To run experiments, add this repository to the python path. Individual examples can then be run via, e.g.,
 ```
