@@ -9,11 +9,11 @@ from pCN_det_free_fractional.GP_models.DeepGP import DeepGP as DeepGPFractional
 from pCN_det_free_fractional.pCNDetFreeSampler import pCNDetFreeSampler
 from pCN_nonfractional.GP_models.StandardGP import StandardGP
 from forward_operators import apply_forward_operator
-from estimate_corr_length import estimate_corr_length
-from utils import compute_statistics, augment_statistics, save_statistics, print_and_save_error_metrics, save_run_time
+from utils import (estimate_corr_length, compute_statistics, augment_statistics, save_statistics,
+                   print_and_save_error_metrics, save_run_time)
 from plotting import (save_flattened_image, save_flattened_image_with_obs_locations, save_image_with_errors,
-                                            plot_mcmc_result, plot_multilayer_mcmc_result, plot_potential_values, plot_acceptance_history,
-                                            save_radon_observations, plot_errors)
+                      plot_mcmc_result, plot_multilayer_mcmc_result, plot_potential_values, plot_acceptance_history,
+                      save_radon_observations, plot_errors)
 
 
 def initialise_deep_gp_and_sampler(params):

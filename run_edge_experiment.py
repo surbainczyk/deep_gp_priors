@@ -8,10 +8,10 @@ from pCN_nonfractional.pCNSampler import pCNSampler
 from pCN_det_free_fractional.GP_models.DeepGP import DeepGP as DeepGPFractional
 from pCN_det_free_fractional.pCNDetFreeSampler import pCNDetFreeSampler
 from pCN_nonfractional.GP_models.StandardGP import StandardGP
-from estimate_corr_length import estimate_corr_length
-from utils import compute_statistics, augment_edge_statistics, print_and_save_label_errs, save_statistics
-from plotting import plot_edge_reconstruction_result, save_flattened_image, save_flattened_image_with_obs_locations, \
-    save_image_with_errors, plot_potential_values, plot_acceptance_history, plot_edge_errors
+from utils import (estimate_corr_length, compute_statistics, augment_edge_statistics,
+                   print_and_save_label_errs, save_statistics)
+from plotting import (plot_edge_reconstruction_result, save_flattened_image, save_flattened_image_with_obs_locations,
+                      save_image_with_errors, plot_potential_values, plot_acceptance_history, plot_edge_errors)
 
 
 def initialise_deep_gp_and_sampler(params):

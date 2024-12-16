@@ -4,74 +4,9 @@ from skimage.data import shepp_logan_phantom, camera
 from skimage.transform import rescale
 
 
-def step_function(n_dof):
-    n_side = int(np.sqrt(n_dof))
-    domain_1d = np.linspace(0, 1, n_side)
-    x, y = np.meshgrid(domain_1d, domain_1d)
-
-    f = np.logical_and(x > -.1, x < 0.5) * np.logical_and(y > -.1, y < 0.5)    # upper left square
-    f = f + 0.5 * ((x + y) > 1.5)    # lower right triangle
-    f_values = f.flatten().astype(float)
-    
-    return f_values
-
-
-def multi_step_function(n_dof):
-    n_side = int(np.sqrt(n_dof))
-    domain_1d = np.linspace(0, 1, n_side)
-    x, y = np.meshgrid(domain_1d, domain_1d)
-
-    step = lambda low_x, up_x, low_y, up_y: np.logical_and(x > low_x, x < up_x) * np.logical_and(y > low_y, y < up_y)
-    f = step(0.15, 0.25, 0.15, 0.25) + step(0.5, 0.9, 0.1, 0.5) + step(0.1, 0.4, 0.6, 0.9) + step(0.65, 0.85, 0.7, 0.9)
-    f_values = f.flatten().astype(float)
-    
-    return f_values
-
-
-def multi_sine_function(n_dof):
-    n_side = int(np.sqrt(n_dof))
-    domain_1d = np.linspace(0, 1, n_side)
-    x, y = np.meshgrid(domain_1d, domain_1d)
-
-    step = lambda lower, upper: np.logical_and(x > lower, x < upper) * np.logical_and(y > lower, y < upper)
-    sine = lambda k: np.sin(np.pi * k * x) * np.sin(np.pi * k * y)
-    cosine = lambda k: np.cos(np.pi * k * x) * np.cos(np.pi * k * y)
-
-    cos2 = cosine(2) * (1 - step(0.25, 0.75))
-    sin4 = sine(4) * step(0.25, 0.75) * (1 - step(0.5, 0.75) - step(0.25, 0.5))
-    sin8 = sine(8) * step(0.5, 0.75)
-    sin16 = sine(16) * step(0.25, 0.5)
-
-    f = cos2 + sin4 + sin8 + sin16
-    f_values = f.flatten()
-    
-    return f_values
-
-
 def shepp_logan(n_dof):
     large_img = shepp_logan_phantom()    # 400 x 400 image of the Shepp-Logan phantom
     scaling = np.sqrt(n_dof) / 400
-    img = rescale(large_img, scale=scaling, mode='reflect', channel_axis=None).flatten()
-
-    return img
-
-
-def shepp_logan_ext(width, width_ext):
-    large_img = shepp_logan_phantom()    # 400 x 400 image of the Shepp-Logan phantom
-    scaling = np.sqrt(width ** 2) / 400
-    phantom_img = rescale(large_img, scale=scaling, mode='reflect', channel_axis=None)
-
-    square_img = np.zeros((width + 2 * width_ext, width + 2 * width_ext))
-    square_img[width_ext:-width_ext, width_ext:-width_ext] = phantom_img
-
-    img = square_img.flatten()
-
-    return img
-
-
-def camera_man(n_dof):
-    large_img = camera()    # 512 x 512 image of the Shepp-Logan phantom
-    scaling = np.sqrt(n_dof) / 512
     img = rescale(large_img, scale=scaling, mode='reflect', channel_axis=None).flatten()
 
     return img
@@ -87,20 +22,6 @@ def square_and_circle(n_dof):
     img[np.logical_and(square_idx_x, square_idx_y)] = 0.5    # draw square
 
     img[(coords_x - 0.6 * width) ** 2 + (coords_y - 0.6 * width) ** 2 < (0.25 * width) ** 2] = 1.0    # draw circle
-    flattened_img = img.flatten()
-
-    return flattened_img
-
-
-def square_and_circle_large(n_dof, scale):
-    width = int(np.sqrt(n_dof))
-    img = np.zeros((width, width))
-
-    n_dof_small = int((width / scale) ** 2)
-    width_small = int(np.sqrt(n_dof_small))
-    w = int((width - width_small) / 2)
-    img[w:-w, :][:, w:-w] = np.reshape(square_and_circle(n_dof_small), (width_small, width_small))
-
     flattened_img = img.flatten()
 
     return flattened_img
@@ -226,79 +147,6 @@ def straight_edge(n_dof):
     e[:, midpoint-t:midpoint+t] = 1
     edge_map = e.flatten()
 
-    return f_values, edge_map
-
-
-def corner_edge(n_dof):
-    n_edge = int(np.sqrt(n_dof))
-    midpoint = int(n_edge / 2)
-    domain_1d = np.linspace(0, 1, n_edge)
-    x, y = np.meshgrid(domain_1d, domain_1d)
-
-    f = np.logical_and(x > -.1, x < 0.5) * np.logical_and(y > -.1, y < 0.5)    # upper left square
-    f = 2 * f - 1
-    f_values = f.flatten().astype(float)
-
-    e = np.zeros((n_edge, n_edge))
-    t = 3   # controls line thickness
-    e[:midpoint+t, midpoint-t:midpoint+t] = 1
-    e[midpoint-t:midpoint+t, :midpoint+t] = 1
-    edge_map = e.flatten()
-    
-    return f_values, edge_map
-
-
-def swerve_edge(n_dof):
-    def swerve_f(x):
-        rescaled_x = (x - 0.1) / 0.8 * np.pi
-        f = 0.5 * np.logical_and(x > 0.1, x < 0.9) * np.sin(rescaled_x) ** 2 * np.cos(rescaled_x) + 0.5
-
-        return f
-
-    n_edge = int(np.sqrt(n_dof))
-    domain_1d = np.linspace(0, 1, n_edge)
-    x, y = np.meshgrid(domain_1d, domain_1d)
-
-    f = x > swerve_f(y)
-    f = 2 * f - 1
-    f_values = f.flatten().astype(float)
-
-    e = np.zeros((n_edge, n_edge))
-    t = 3   # controls line thickness
-    middle_idx = (swerve_f(domain_1d) * n_edge).astype(int)
-    for shift in range(-t, t):
-        e[np.arange(n_edge), middle_idx+shift] = 1
-    edge_map = e.flatten()
-    
-    return f_values, edge_map
-
-
-def zigzag_edge(n_dof):
-    def zigzag_f(x):
-        f = np.logical_and(x > 0.1, x < 0.5) * (- np.abs(x - 0.3) + 0.2) + np.logical_and(x >= 0.5, x < 0.9) * (np.abs(x - 0.7) - 0.2) + 0.5
-
-        return f
-
-    n_edge = int(np.sqrt(n_dof))
-    domain_1d = np.linspace(0, 1, n_edge)
-    x, y = np.meshgrid(domain_1d, domain_1d)
-
-    f = x > zigzag_f(y)
-    f = 2 * f - 1
-    f_values = f.flatten().astype(float)
-
-    e = np.zeros((n_edge, n_edge))
-    t = 3   # controls line thickness
-    middle_idx = (zigzag_f(domain_1d) * n_edge).astype(int)
-    straight_idx = np.concatenate((np.arange(0.1 * n_edge, dtype=int), np.arange(int(0.9 * n_edge), n_edge, dtype=int)))
-    for shift in range(-t, t):
-        e[straight_idx, middle_idx[straight_idx]+shift] = 1
-    angled_idx = np.arange(int(0.1 * n_edge) + 1, 0.9 * n_edge - 1, dtype=int)
-    angled_t = int(np.sqrt(2) * t)
-    for shift in range(-angled_t, angled_t):
-        e[angled_idx, middle_idx[angled_idx]+shift] = 1
-    edge_map = e.flatten()
-    
     return f_values, edge_map
 
 

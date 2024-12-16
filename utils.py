@@ -20,22 +20,6 @@ def numba_sort_indices(indptr, indices, data):
         data[indptr[i]:indptr[i+1]] = col_data[idx]
 
 
-def interpolation_initial_state(observations, deep_gp):
-    obs_width = int(np.sqrt(observations.size))
-    obs_img = np.reshape(observations, (obs_width, obs_width))
-    edges = filters.roberts(obs_img)
-
-    scaling = np.sqrt(deep_gp.layer_n_dof / observations.size)
-    scaled_grad_norm = zoom(edges, scaling).flatten()
-
-    # perform forward pass with base layer's diff. operator
-    desired_u_0 = 10 * scaled_grad_norm    # using 10 to obtain larger values
-    diag_vector = 400 * np.ones(deep_gp.layer_n_dof)
-    initial_state = deep_gp.base_layer.evaluate_forward_pass(diag_vector, desired_u_0)
-
-    return initial_state
-
-
 def compute_statistics(mcmc_obj, layer_n_dof, shift=0.0, scale=1.0):
     stats = {}
 
@@ -391,3 +375,18 @@ def threshold_with_length_scale(ls_img, v_range=(-1, 1)):
     sol = square_sol.flatten()
 
     return sol
+
+
+def estimate_corr_length(gp, obs, A, noise_var, bounds=(0.01, 1.0)):
+    def likelihood(rho):
+        lh = gp.likelihood(rho, obs, A, noise_var)
+        
+        return lh
+
+    result = minimize_scalar(likelihood, bounds=bounds)
+    if result.success:
+        opt_rho = result.x
+    else:
+        raise ValueError("minimize_scalar did not converge.")
+
+    return opt_rho
