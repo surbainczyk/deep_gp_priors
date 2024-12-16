@@ -94,13 +94,10 @@ def run_experiment(parameters):
     print("Computing errors/statistics...")
     statistics = compute_statistics(mcmc_solver, n_dof, shift, scale)
     diag_mean  = deep_gp.F(statistics[f"layer_{deep_gp.layers-1}_mean"])
-    try:
-        Q_mean, diag_mat_mean, log_det_QDQ_mean = deep_gp.top_layer.compute_rat_approx_C_inv(diag_mean)
+    if (parameters['alpha'] / 2).is_integer():
+        Q_mean, diag_mat_mean, log_det_QDQ_mean = deep_gp.top_layer.compute_C_inv(diag_mean)
         _, gp_vals_mean_norm = mcmc_solver.potential_and_regression(Q_mean, log_det_QDQ_mean, diag_mat_mean)
-    except ValueError:    # using a gp and mcmc_solver without logdet output/input
-        Q_mean, diag_mat_mean = deep_gp.top_layer.compute_rat_approx_C_inv(diag_mean)
-        _, gp_vals_mean_norm = mcmc_solver.potential_and_regression(Q_mean, diag_mat_mean)
-    except AttributeError:
+    else:
         gp_vals_mean_norm = mcmc_solver.regression(diag_mean)
     gp_vals_mean = scale * gp_vals_mean_norm + shift
     augment_statistics(statistics, true_img, standard_gp_vals, rho_vals, gp_vals_mean, observations)
