@@ -124,7 +124,7 @@ def run_ind_experiment(DeepGPClass, MCMCSolverClass, parameters, iter_counts, id
     
     np.random.seed(id_no)    # fix MCMC samples for each ID number
     mcmc_solver.run_mcmc(its=max(iter_counts), burn_in=burn_in, beta=0.005, accept_rate=0.25,
-                        beta_split=20, compute_ess=False, breakpoint_its=iter_counts)
+                        beta_split=20, breakpoint_its=iter_counts)
     
     print("Postprocessing...")
     if not os.path.isdir(plots_dir):

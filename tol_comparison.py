@@ -83,7 +83,7 @@ def run_tol_experiment(mcmc_solver, parameters, tol, id_no, plots_dir):
     mcmc_solver.old_solver.tol = mcmc_solver.prop_solver.tol = tol
     
     np.random.seed(id_no)    # fix MCMC samples for each ID number
-    mcmc_solver.run_mcmc(its=its, burn_in=burn_in, beta=0.005, accept_rate=0.25, beta_split=int(its / 1000), compute_ess=False)
+    mcmc_solver.run_mcmc(its=its, burn_in=burn_in, beta=0.005, accept_rate=0.25, beta_split=int(its / 1000))
     
     print("Postprocessing...")
     if not os.path.isdir(plots_dir):
