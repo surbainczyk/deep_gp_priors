@@ -562,7 +562,7 @@ def plot_potential_values(pot_vals, save_as, logscale=True, burn_in=None):
     plt.figure()
     plt.plot(pot_vals)
     if burn_in:    # plot line at burn-in value
-        plt.axvline(burn_in, 'k:')
+        plt.axvline(burn_in, ls=':', color='k')
     if logscale:
         plt.yscale("log")
 
