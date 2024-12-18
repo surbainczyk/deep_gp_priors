@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from skimage.metrics import mean_squared_error, peak_signal_noise_ratio, structural_similarity
 
@@ -360,79 +359,70 @@ def plot_mcmc_result(stats, save_as, avoid_oom=True):
         gp_list  = stats['standard_gp_vals']
         rho_list = stats["rho_vals"]
         num_standard_gps = num_gps
-    
-    fig, axs = plt.subplots(4 + num_standard_gps, 3, figsize=(15, 4 * (4 + num_standard_gps)))
-    fig.set_dpi(300)
 
-    # plot mean estimate results
-    top_layer_error = stats["top_layer_mean_scaled"] - stats["true_img"]
-    l1e_mean = np.mean(np.abs(top_layer_error))
-    plot_2D_function(axs[0, 0], top_layer_error, x_label=r"Error of $\mathrm{Mean}\left(u_1\right)$, L1 error=" + f"{l1e_mean:.4f}")
+    with plt.rc_context({'figure.dpi': 300, 'axes.labelsize': 10, 'xtick.labelsize': 10, 'ytick.labelsize': 10,
+                         'legend.fontsize': 10}):
+        _, axs = plt.subplots(4 + num_standard_gps, 3, figsize=(15, 4 * (4 + num_standard_gps)))
 
-    top_layer_mean = stats["top_layer_mean_scaled"]
-    plot_2D_function(axs[0, 1], top_layer_mean, x_label=r"$\mathrm{Mean}\left(u_1\right)$")
+        # plot mean estimate results
+        top_layer_error = stats["top_layer_mean_scaled"] - stats["true_img"]
+        l1e_mean = np.mean(np.abs(top_layer_error))
+        plot_2D_function(axs[0, 0], top_layer_error,
+                         x_label=r"Error of $\mathrm{Mean}\left(u_1\right)$, L1 error=" + f"{l1e_mean:.4f}")
 
-    F_mean = stats["layer_0_F_sqrt_mean"]
-    plot_2D_function(axs[0, 2], F_mean, x_label=r"$\mathrm{Mean}\left(F\left(u_0\right)^{1/2}\right)$")
+        top_layer_mean = stats["top_layer_mean_scaled"]
+        plot_2D_function(axs[0, 1], top_layer_mean, x_label=r"$\mathrm{Mean}\left(u_1\right)$")
 
-    # plot MAP estimate results
-    top_layer_map_error = stats["top_layer_MAP_scaled"] - stats["true_img"]
-    l1e_map = np.mean(np.abs(top_layer_map_error))
-    plot_2D_function(axs[1, 0], top_layer_map_error, x_label=r"Error of $\mathrm{MAP}\left(u_1\right)$, L1 error=" + f"{l1e_map:.4f}")
+        F_mean = stats["layer_0_F_sqrt_mean"]
+        plot_2D_function(axs[0, 2], F_mean, x_label=r"$\mathrm{Mean}\left(F\left(u_0\right)^{1/2}\right)$")
 
-    top_layer_map = stats["top_layer_MAP_scaled"]
-    plot_2D_function(axs[1, 1], top_layer_map, x_label=r"$u_1^\mathrm{MAP}$")
+        # plot MAP estimate results
+        top_layer_map_error = stats["top_layer_MAP_scaled"] - stats["true_img"]
+        l1e_map = np.mean(np.abs(top_layer_map_error))
+        plot_2D_function(axs[1, 0], top_layer_map_error,
+                         x_label=r"Error of $\mathrm{MAP}\left(u_1\right)$, L1 error=" + f"{l1e_map:.4f}")
 
-    F_map = stats["layer_0_F_sqrt_MAP"]
-    plot_2D_function(axs[1, 2], F_map, x_label=r"$F\left(u_0^\mathrm{MAP}\right)^{1/2}$")
+        top_layer_map = stats["top_layer_MAP_scaled"]
+        plot_2D_function(axs[1, 1], top_layer_map, x_label=r"$u_1^\mathrm{MAP}$")
 
-    # plot GP regression results/errors
-    for i in range(num_standard_gps):
-        rho = rho_list[i]
-        gp_error = gp_list[i] - stats["true_img"]
-        l1e_long = np.mean(np.abs(gp_error))
-        plot_2D_function(axs[i + 2, 0], gp_error, x_label=rf"Error of GP ($\rho={rho:.2f}$), L1 error=" + f"{l1e_long:.4f}")
+        F_map = stats["layer_0_F_sqrt_MAP"]
+        plot_2D_function(axs[1, 2], F_map, x_label=r"$F\left(u_0^\mathrm{MAP}\right)^{1/2}$")
 
-        gp = gp_list[i]
-        plot_2D_function(axs[i + 2, 1], gp, x_label=rf"GP ($\rho={rho:.2f}$)")
+        # plot GP regression results/errors
+        for i in range(num_standard_gps):
+            rho = rho_list[i]
+            gp_error = gp_list[i] - stats["true_img"]
+            l1e_long = np.mean(np.abs(gp_error))
+            plot_2D_function(axs[i + 2, 0], gp_error,
+                             x_label=rf"Error of GP ($\rho={rho:.2f}$), L1 error=" + f"{l1e_long:.4f}")
 
-        plot_placeholder(axs[i + 2, 2])
+            gp = gp_list[i]
+            plot_2D_function(axs[i + 2, 1], gp, x_label=rf"GP ($\rho={rho:.2f}$)")
 
-    # plot GP regression results/errors with length scale from mean of deep GP layer
-    gp_mean_error = stats["gp_mean"] - stats["true_img"]
-    l1e_gp_mean = np.mean(np.abs(gp_mean_error))
-    plot_2D_function(axs[-2, 0], gp_mean_error, x_label=r"Error of GP (mean), L1 error=" + f"{l1e_gp_mean:.4f}")
+            plot_placeholder(axs[i + 2, 2])
 
-    gp_mean = stats["gp_mean"]
-    plot_2D_function(axs[-2, 1], gp_mean, x_label=r"GP (mean)")
+        # plot GP regression results/errors with length scale from mean of deep GP layer
+        gp_mean_error = stats["gp_mean"] - stats["true_img"]
+        l1e_gp_mean = np.mean(np.abs(gp_mean_error))
+        plot_2D_function(axs[-2, 0], gp_mean_error, x_label=r"Error of GP (mean), L1 error=" + f"{l1e_gp_mean:.4f}")
 
-    F_gp_mean = stats["layer_0_mean_F_sqrt"]
-    plot_2D_function(axs[-2, 2], F_gp_mean, x_label=r"$F\left(\mathrm{Mean}\left(u_0\right)\right)^{1/2}$")
-    
-    # # plot gradient errors for top layer, and both GP examples
-    # top_layer_grad = compute_gradient_norm(top_layer_error)
-    # plot_2D_function(axs[-2, 0], top_layer_grad, logscale=True,
-    #                  x_label=r"Gradient error of $\mathrm{Mean}\left(u_1\right)$, MSE=" + f"{np.mean(top_layer_grad):.4f}")
+        gp_mean = stats["gp_mean"]
+        plot_2D_function(axs[-2, 1], gp_mean, x_label=r"GP (mean)")
 
-    # long_grad = compute_gradient_norm(gp_long_error)
-    # plot_2D_function(axs[-2, 1], long_grad, logscale=True,
-    #                  x_label=r"Gradient error of GP (long), MSE=" + f"{np.mean(long_grad):.4f}")
+        F_gp_mean = stats["layer_0_mean_F_sqrt"]
+        plot_2D_function(axs[-2, 2], F_gp_mean, x_label=r"$F\left(\mathrm{Mean}\left(u_0\right)\right)^{1/2}$")
+        
+        # plot standard deviation of top and hidden layer
+        plot_placeholder(axs[-1, 0])
 
-    # short_grad = compute_gradient_norm(gp_short_error)
-    # plot_2D_function(axs[-2, 2], short_grad, logscale=True,
-    #                  x_label=r"Gradient error of GP (short), MSE=" + f"{np.mean(short_grad):.4f}")
-    
-    # plot standard deviation of top and hidden layer
-    plot_placeholder(axs[-1, 0])
+        top_layer_std = stats["top_layer_std"]
+        plot_2D_function(axs[-1, 1], top_layer_std, x_label=r"$\mathrm{StD}\left(u_1\right)$", logscale=True)
 
-    top_layer_std = stats["top_layer_std"]
-    plot_2D_function(axs[-1, 1], top_layer_std, x_label=r"$\mathrm{StD}\left(u_1\right)$", logscale=True)
+        F_std = stats["layer_0_F_std"]
+        plot_2D_function(axs[-1, 2], F_std, x_label=r"$\mathrm{StD}\left(F\left(u_0\right)^{1/2}\right)$", logscale=True)
 
-    F_std = stats["layer_0_F_std"]
-    plot_2D_function(axs[-1, 2], F_std, x_label=r"$\mathrm{StD}\left(F\left(u_0\right)^{1/2}\right)$", logscale=True)
-
-    plt.savefig(save_as, bbox_inches="tight")
-    plt.close()
+        plt.savefig(save_as, bbox_inches="tight")
+        plt.close()
 
 
 def plot_multilayer_mcmc_result(stats, layers, save_as, avoid_oom=True):
@@ -448,77 +438,79 @@ def plot_multilayer_mcmc_result(stats, layers, save_as, avoid_oom=True):
         num_standard_gps = num_gps
     rows = 4 + num_standard_gps
     cols = 2 + layers
-    fig, axs = plt.subplots(rows, cols, figsize=(5 * cols, 4 * rows))
-    fig.set_dpi(300)
-
-    # plot mean estimate results
-    top_layer_error = stats["top_layer_mean_scaled"] - stats["true_img"]
-    l1e_mean = np.mean(np.abs(top_layer_error))
-    plot_2D_function(axs[0, 0], top_layer_error,
-                     x_label=r"Error of $\mathrm{Mean}" + rf"\left(u_{layers}\right)$, L1 error={l1e_mean:.4f}")
-
-    top_layer_mean = stats["top_layer_mean_scaled"]
-    plot_2D_function(axs[0, 1], top_layer_mean, x_label=r"$\mathrm{Mean}" + rf"\left(u_{layers}\right)$")
-
-    for i in range(layers - 1, -1, -1):
-        F_mean = stats[f"layer_{i}_mean_F_sqrt"]
-        plot_2D_function(axs[0, 1 + layers - i], F_mean, x_label=r"$F\left(\mathrm{Mean}\left(" + rf"u_{i}" + r"\right)^{1/2}\right)$")
-
-    # plot MAP estimate results
-    top_layer_map_error = stats["top_layer_MAP_scaled"] - stats["true_img"]
-    l1e_map = np.mean(np.abs(top_layer_map_error))
-    plot_2D_function(axs[1, 0], top_layer_map_error,
-                     x_label=r"Error of $\mathrm{MAP}" + rf"\left(u_{layers}\right)$, L1 error={l1e_map:.4f}")
-
-    top_layer_map = stats["top_layer_MAP_scaled"]
-    plot_2D_function(axs[1, 1], top_layer_map, x_label=rf"$u_{layers}" + r"^\mathrm{MAP}$")
-
-    for i in range(layers):
-        plot_placeholder(axs[1, 2 + i])    # we don't have MAP results on these layers
-
-    # plot GP regression results/errors
-    for i in range(num_standard_gps):
-        rho = rho_list[i]
-        gp_error = gp_list[i] - stats["true_img"]
-        l1e_long = np.mean(np.abs(gp_error))
-        plot_2D_function(axs[i + 2, 0], gp_error, x_label=rf"Error of GP ($\rho={rho:.2f}$), L1 error=" + f"{l1e_long:.4f}")
-
-        gp = gp_list[i]
-        plot_2D_function(axs[i + 2, 1], gp, x_label=rf"GP ($\rho={rho:.2f}$)")
-
-        for j in range(layers):
-            plot_placeholder(axs[i + 2, 2 + j])
-
-    # plot GP regression results/errors with length scale from mean of deep GP layer
-    gp_mean_error = stats["gp_mean"] - stats["true_img"]
-    l1e_gp_mean = np.mean(np.abs(gp_mean_error))
-    plot_2D_function(axs[-2, 0], gp_mean_error, x_label=r"Error of GP (mean), L1 error=" + f"{l1e_gp_mean:.4f}")
-
-    gp_mean = stats["gp_mean"]
-    plot_2D_function(axs[-2, 1], gp_mean, x_label=r"GP (mean)")
-
-    F_gp_mean = stats[f"layer_{layers-1}_mean_F_sqrt"]
-    plot_2D_function(axs[-2, 2], F_gp_mean, x_label=r"$F\left(\mathrm{Mean}\left(" + rf"u_{layers-1}" + r"\right)\right)^{1/2}$")
-
-    for i in range(layers - 1):
-        plot_placeholder(axs[-2, 3 + i])
     
-    # plot standard deviation of top layer
-    plot_placeholder(axs[-1, 0])
+    with plt.rc_context({'figure.dpi': 300, 'axes.labelsize': 10, 'xtick.labelsize': 10, 'ytick.labelsize': 10,
+                         'legend.fontsize': 10}):
+        _, axs = plt.subplots(rows, cols, figsize=(5 * cols, 4 * rows))
 
-    top_layer_std = stats["top_layer_std"]
-    plot_2D_function(axs[-1, 1], top_layer_std, x_label=r"$\mathrm{StD}\left(" + rf"u_{layers}\right)$", logscale=True)
+        # plot mean estimate results
+        top_layer_error = stats["top_layer_mean_scaled"] - stats["true_img"]
+        l1e_mean = np.mean(np.abs(top_layer_error))
+        plot_2D_function(axs[0, 0], top_layer_error,
+                        x_label=r"Error of $\mathrm{Mean}" + rf"\left(u_{layers}\right)$, L1 error={l1e_mean:.4f}")
 
-    for i in range(layers - 1, -1, -1):
-        F_std = stats[f"layer_{i}_F_std"]
-        plot_2D_function(axs[-1, 1 + layers - i], F_std,
-                         x_label=r"$\mathrm{StD}\left(F\left(" + rf"u_{i}" + r"\right)^{1/2}\right)$", logscale=True)
+        top_layer_mean = stats["top_layer_mean_scaled"]
+        plot_2D_function(axs[0, 1], top_layer_mean, x_label=r"$\mathrm{Mean}" + rf"\left(u_{layers}\right)$")
 
-    for i in range(layers - 2):
-        plot_placeholder(axs[-1, 4 + i])
+        for i in range(layers - 1, -1, -1):
+            F_mean = stats[f"layer_{i}_mean_F_sqrt"]
+            plot_2D_function(axs[0, 1 + layers - i], F_mean, x_label=r"$F\left(\mathrm{Mean}\left(" + rf"u_{i}" + r"\right)^{1/2}\right)$")
 
-    plt.savefig(save_as, bbox_inches="tight")
-    plt.close()
+        # plot MAP estimate results
+        top_layer_map_error = stats["top_layer_MAP_scaled"] - stats["true_img"]
+        l1e_map = np.mean(np.abs(top_layer_map_error))
+        plot_2D_function(axs[1, 0], top_layer_map_error,
+                        x_label=r"Error of $\mathrm{MAP}" + rf"\left(u_{layers}\right)$, L1 error={l1e_map:.4f}")
+
+        top_layer_map = stats["top_layer_MAP_scaled"]
+        plot_2D_function(axs[1, 1], top_layer_map, x_label=rf"$u_{layers}" + r"^\mathrm{MAP}$")
+
+        for i in range(layers):
+            plot_placeholder(axs[1, 2 + i])    # we don't have MAP results on these layers
+
+        # plot GP regression results/errors
+        for i in range(num_standard_gps):
+            rho = rho_list[i]
+            gp_error = gp_list[i] - stats["true_img"]
+            l1e_long = np.mean(np.abs(gp_error))
+            plot_2D_function(axs[i + 2, 0], gp_error, x_label=rf"Error of GP ($\rho={rho:.2f}$), L1 error=" + f"{l1e_long:.4f}")
+
+            gp = gp_list[i]
+            plot_2D_function(axs[i + 2, 1], gp, x_label=rf"GP ($\rho={rho:.2f}$)")
+
+            for j in range(layers):
+                plot_placeholder(axs[i + 2, 2 + j])
+
+        # plot GP regression results/errors with length scale from mean of deep GP layer
+        gp_mean_error = stats["gp_mean"] - stats["true_img"]
+        l1e_gp_mean = np.mean(np.abs(gp_mean_error))
+        plot_2D_function(axs[-2, 0], gp_mean_error, x_label=r"Error of GP (mean), L1 error=" + f"{l1e_gp_mean:.4f}")
+
+        gp_mean = stats["gp_mean"]
+        plot_2D_function(axs[-2, 1], gp_mean, x_label=r"GP (mean)")
+
+        F_gp_mean = stats[f"layer_{layers-1}_mean_F_sqrt"]
+        plot_2D_function(axs[-2, 2], F_gp_mean, x_label=r"$F\left(\mathrm{Mean}\left(" + rf"u_{layers-1}" + r"\right)\right)^{1/2}$")
+
+        for i in range(layers - 1):
+            plot_placeholder(axs[-2, 3 + i])
+        
+        # plot standard deviation of top layer
+        plot_placeholder(axs[-1, 0])
+
+        top_layer_std = stats["top_layer_std"]
+        plot_2D_function(axs[-1, 1], top_layer_std, x_label=r"$\mathrm{StD}\left(" + rf"u_{layers}\right)$", logscale=True)
+
+        for i in range(layers - 1, -1, -1):
+            F_std = stats[f"layer_{i}_F_std"]
+            plot_2D_function(axs[-1, 1 + layers - i], F_std,
+                            x_label=r"$\mathrm{StD}\left(F\left(" + rf"u_{i}" + r"\right)^{1/2}\right)$", logscale=True)
+
+        for i in range(layers - 2):
+            plot_placeholder(axs[-1, 4 + i])
+
+        plt.savefig(save_as, bbox_inches="tight")
+        plt.close()
 
 
 def plot_2D_function(ax, data, x_label=None, logscale=False):
@@ -674,75 +666,78 @@ def plot_edge_reconstruction_result(stats, save_as, edge_coords=None, avoid_oom=
         num_standard_gps = num_gps
     
     true_img = stats["true_img"]
-    fig, axs = plt.subplots(2 + num_standard_gps, 5, figsize=(25, 4 * (2 + num_standard_gps)))
-    fig.set_dpi(300)
 
-    # plot top layer results
-    deep_gp_err = (true_img != stats["deep_gp_sol"]).sum() / true_img.size
-    plot_2D_function(axs[0, 0], stats["deep_gp_sol"], x_label=f"Deep GP reconstruction (err={deep_gp_err:.4f}).")
-    if edge_coords:
-        plot_line(axs[0, 0], edge_coords)
-        loc = line_location(stats["deep_gp_sol"])
-        plot_line(axs[0, 0], [[loc, loc], [0, 1]], style="r-.")
+    with plt.rc_context({'figure.dpi': 300, 'axes.labelsize': 10, 'xtick.labelsize': 10, 'ytick.labelsize': 10,
+                         'legend.fontsize': 10}):
+        _, axs = plt.subplots(2 + num_standard_gps, 5, figsize=(25, 4 * (2 + num_standard_gps)))
 
-    top_layer_mean = stats["top_layer_mean_scaled"]
-    plot_2D_function(axs[0, 1], top_layer_mean, x_label=r"$\mathrm{Mean}\left(u_1\right)$.")
-
-    top_layer_grad = compute_gradient_norm(stats["top_layer_mean_scaled"])
-    plot_2D_function(axs[0, 2], top_layer_grad, x_label=r"Gradient norm of $\mathrm{Mean}\left(u_1\right)$.")
-
-    top_layer_edges = stats["deep_gp_edges"]
-    fs = stats["deep_gp_f_score"]
-    plot_2D_function(axs[0, 3], top_layer_edges, x_label=rf"Reconstructed edge map (OIS F-score {fs:.4f}).")
-
-    top_layer_class_edges = stats["deep_gp_class_edges"]
-    cs = stats["deep_gp_class"]
-    plot_2D_function(axs[0, 4], top_layer_class_edges, x_label=rf"Reconstructed edge map (OIS class. error {cs:.4f}).")
-
-    # plot hidden layer results
-    deep_gp_err_ls = (true_img != stats["deep_gp_sol_ls"]).sum() / true_img.size
-    plot_2D_function(axs[1, 0], stats["deep_gp_sol_ls"], x_label=f"Deep GP rec. from length scale (err={deep_gp_err_ls:.4f}).")
-    if edge_coords:
-        plot_line(axs[1, 0], edge_coords)
-        loc = line_location(stats["deep_gp_sol_ls"])
-        plot_line(axs[1, 0], [[loc, loc], [0, 1]], style="r-.")
-
-    F_mean = stats["layer_0_F_sqrt_mean"]
-    fs = stats["deep_gp_ls_f_score"]
-    plot_2D_function(axs[1, 1], F_mean, x_label=r"$\mathrm{Mean}\left(F\left(u_0\right)^{1/2}\right)$.")
-
-    plot_placeholder(axs[1, 2])
-
-    length_scale_edges = stats["deep_gp_ls_edges"]
-    plot_2D_function(axs[1, 3], length_scale_edges, x_label=rf"Reconstructed edge map (OIS F-score {fs:.4f}).")
-
-    length_scale_class_edges = stats["deep_gp_ls_class_edges"]
-    cs = stats["deep_gp_ls_class"]
-    plot_2D_function(axs[1, 4], length_scale_class_edges, x_label=rf"Reconstructed edge map (OIS class. error {cs:.4f}).")
-
-    # plot GP regression results/errors
-    for j in range(num_standard_gps):
-        i = gp_idx[j]
-        rho = stats["rho_vals"][i]
-        gp_err = (true_img != stats["gp_sols"][i]).sum() / true_img.size
-        plot_2D_function(axs[j + 2, 0], stats["gp_sols"][i], x_label=rf"GP reconstruction ($\rho={rho:.2f}$, err={gp_err:.4f}).")
+        # plot top layer results
+        deep_gp_err = (true_img != stats["deep_gp_sol"]).sum() / true_img.size
+        plot_2D_function(axs[0, 0], stats["deep_gp_sol"], x_label=f"Deep GP reconstruction (err={deep_gp_err:.4f}).")
         if edge_coords:
-            plot_line(axs[j + 2, 0], edge_coords)
-            loc = line_location(stats["gp_sols"][i])
-            plot_line(axs[j + 2, 0], [[loc, loc], [0, 1]], style="r-.")
+            plot_line(axs[0, 0], edge_coords)
+            loc = line_location(stats["deep_gp_sol"])
+            plot_line(axs[0, 0], [[loc, loc], [0, 1]], style="r-.")
 
-        gp = stats["standard_gp_vals"][i]
-        plot_2D_function(axs[j + 2, 1], gp, x_label=rf"GP ($\rho={rho:.2f}$).")
+        top_layer_mean = stats["top_layer_mean_scaled"]
+        plot_2D_function(axs[0, 1], top_layer_mean, x_label=r"$\mathrm{Mean}\left(u_1\right)$.")
 
-        gp_grad = compute_gradient_norm(stats["standard_gp_vals"][i])
-        plot_2D_function(axs[j + 2, 2], gp_grad, x_label=rf"Gradient norm of GP ($\rho={rho:.2f}$).")
+        top_layer_grad = compute_gradient_norm(stats["top_layer_mean_scaled"])
+        plot_2D_function(axs[0, 2], top_layer_grad, x_label=r"Gradient norm of $\mathrm{Mean}\left(u_1\right)$.")
 
-        gp_edges = stats["gp_edges"][i]
-        fs = stats["gp_f_scores"][i]
-        plot_2D_function(axs[j + 2, 3], gp_edges, x_label=rf"Reconstructed edge map (OIS F-score {fs:.4f}).")
+        top_layer_edges = stats["deep_gp_edges"]
+        fs = stats["deep_gp_f_score"]
+        plot_2D_function(axs[0, 3], top_layer_edges, x_label=rf"Reconstructed edge map (OIS F-score {fs:.4f}).")
 
-        gp_class_edges = stats["gp_class_edges"][i]
-        cs = stats["gp_class"][i]
-        plot_2D_function(axs[j + 2, 4], gp_class_edges, x_label=rf"Reconstructed edge map (OIS class. error {cs:.4f}).")
+        top_layer_class_edges = stats["deep_gp_class_edges"]
+        cs = stats["deep_gp_class"]
+        plot_2D_function(axs[0, 4], top_layer_class_edges, x_label=rf"Reconstructed edge map (OIS class. error {cs:.4f}).")
 
-    plt.savefig(save_as, bbox_inches="tight")
+        # plot hidden layer results
+        deep_gp_err_ls = (true_img != stats["deep_gp_sol_ls"]).sum() / true_img.size
+        plot_2D_function(axs[1, 0], stats["deep_gp_sol_ls"], x_label=f"Deep GP rec. from length scale (err={deep_gp_err_ls:.4f}).")
+        if edge_coords:
+            plot_line(axs[1, 0], edge_coords)
+            loc = line_location(stats["deep_gp_sol_ls"])
+            plot_line(axs[1, 0], [[loc, loc], [0, 1]], style="r-.")
+
+        F_mean = stats["layer_0_F_sqrt_mean"]
+        fs = stats["deep_gp_ls_f_score"]
+        plot_2D_function(axs[1, 1], F_mean, x_label=r"$\mathrm{Mean}\left(F\left(u_0\right)^{1/2}\right)$.")
+
+        plot_placeholder(axs[1, 2])
+
+        length_scale_edges = stats["deep_gp_ls_edges"]
+        plot_2D_function(axs[1, 3], length_scale_edges, x_label=rf"Reconstructed edge map (OIS F-score {fs:.4f}).")
+
+        length_scale_class_edges = stats["deep_gp_ls_class_edges"]
+        cs = stats["deep_gp_ls_class"]
+        plot_2D_function(axs[1, 4], length_scale_class_edges, x_label=rf"Reconstructed edge map (OIS class. error {cs:.4f}).")
+
+        # plot GP regression results/errors
+        for j in range(num_standard_gps):
+            i = gp_idx[j]
+            rho = stats["rho_vals"][i]
+            gp_err = (true_img != stats["gp_sols"][i]).sum() / true_img.size
+            plot_2D_function(axs[j + 2, 0], stats["gp_sols"][i], x_label=rf"GP reconstruction ($\rho={rho:.2f}$, err={gp_err:.4f}).")
+            if edge_coords:
+                plot_line(axs[j + 2, 0], edge_coords)
+                loc = line_location(stats["gp_sols"][i])
+                plot_line(axs[j + 2, 0], [[loc, loc], [0, 1]], style="r-.")
+
+            gp = stats["standard_gp_vals"][i]
+            plot_2D_function(axs[j + 2, 1], gp, x_label=rf"GP ($\rho={rho:.2f}$).")
+
+            gp_grad = compute_gradient_norm(stats["standard_gp_vals"][i])
+            plot_2D_function(axs[j + 2, 2], gp_grad, x_label=rf"Gradient norm of GP ($\rho={rho:.2f}$).")
+
+            gp_edges = stats["gp_edges"][i]
+            fs = stats["gp_f_scores"][i]
+            plot_2D_function(axs[j + 2, 3], gp_edges, x_label=rf"Reconstructed edge map (OIS F-score {fs:.4f}).")
+
+            gp_class_edges = stats["gp_class_edges"][i]
+            cs = stats["gp_class"][i]
+            plot_2D_function(axs[j + 2, 4], gp_class_edges, x_label=rf"Reconstructed edge map (OIS class. error {cs:.4f}).")
+
+        plt.savefig(save_as, bbox_inches="tight")
+        plt.close()
