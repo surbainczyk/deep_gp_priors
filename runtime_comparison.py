@@ -2,7 +2,6 @@ import os
 import pprint
 import pickle
 import numpy as np
-import pandas as pd
 from datetime import datetime
 from skimage.metrics import mean_squared_error, peak_signal_noise_ratio, structural_similarity
 
@@ -124,14 +123,16 @@ def run_ind_experiment(DeepGPClass, MCMCSolverClass, parameters, iter_counts, id
     
     np.random.seed(id_no)    # fix MCMC samples for each ID number
     mcmc_solver.run_mcmc(its=max(iter_counts), burn_in=burn_in, beta=0.005, accept_rate=0.25,
-                        beta_split=20, breakpoint_its=iter_counts)
+                         beta_split=20, breakpoint_its=iter_counts, store_iterates=True)
     
     print("Postprocessing...")
     if not os.path.isdir(plots_dir):
         os.mkdir(plots_dir)
     
     alpha = parameters['alpha']
-    save_ind_result(mcmc_solver, true_img, iter_counts, alpha, scale, shift, plots_dir + f"ind_result_a{alpha:.1f}_{id_no}.pickle")
+    save_ind_result(mcmc_solver, true_img, iter_counts, alpha, scale, shift,
+                    plots_dir + f"ind_result_a{alpha:.1f}_{id_no}.pickle")
+    save_mcmc_iterates(mcmc_solver, plots_dir + f"ind_iterates_a{alpha:.1f}_{id_no}.pickle")
     save_run_times_dict(mcmc_solver, iter_counts, plots_dir + f"ind_run_times_a{alpha:.1f}_{id_no}.pickle")
 
     print("Finished. The time is:")
@@ -157,6 +158,13 @@ def save_ind_result(mcmc_solver, true_img, iter_counts, alpha, scale, shift, pck
     with open(pck_save_as, 'wb') as f:
         pickle.dump(pck_obj, f, protocol=pickle.HIGHEST_PROTOCOL)
     print(f"Saved results to: {pck_save_as}")
+
+
+def save_mcmc_iterates(mcmc_solver, pck_save_as):
+    pck_obj = (mcmc_solver.prop_array, mcmc_solver.u0_array)
+    with open(pck_save_as, 'wb') as f:
+        pickle.dump(pck_obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+    print(f"Saved MCMC iterates to: {pck_save_as}")
 
 
 def save_run_times_dict(mcmc_solver, iter_counts, pck_save_as):

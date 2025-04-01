@@ -26,9 +26,9 @@ class pCNSampler:
         self.high_dim_noise = dot_mkl(self.A.T, self.A, cast=True) / self.squared_sigma
 
     def run_mcmc(self, its=int(1e3), burn_in=int(2e2), initial_state=None, beta=0.025, accept_rate=0.3, prior_std=1.0,
-                 beta_split=int(1e2), verbose=True, breakpoint_its=None):
+                 beta_split=int(1e2), verbose=True, breakpoint_its=None, store_iterates=False):
         # following the non-centred algorithm, Algorithm 1, in "How deep are deep Gaussian processes?"
-        self.set_up_mcmc_variables(its)
+        self.set_up_mcmc_variables(its, store_iterates=store_iterates)
         start = time()
         
         old_proposal = np.zeros(self.deep_gp.n_dof) if initial_state is None else initial_state
@@ -82,6 +82,10 @@ class pCNSampler:
             
             self.potential_vals[i + 1] = potential_val if accepted else self.potential_vals[i]
 
+            if store_iterates:
+                self.prop_array[:, i] = old_proposal
+                self.u0_array[:, i] = old_u
+
             if i >= burn_in:
                 counter = i - burn_in + 1
                 self.u_mean, self.u_sse = update_stochastics(old_u, self.u_mean, self.u_sse, counter=counter)
@@ -111,11 +115,15 @@ class pCNSampler:
         self.run_time = time() - start
         print(f"Final beta was beta = {beta}")
 
-    def set_up_mcmc_variables(self, its):
+    def set_up_mcmc_variables(self, its, store_iterates=False):
         self.potential_vals = np.zeros(its + 1)
         self.u_mean = self.u_map = self.u_sse = 0
         self.F_mean = self.F_map = self.F_sse = 0
         self.regr_mean = self.regr_map = self.regr_sse = 0
+
+        if store_iterates:
+            self.prop_array = np.zeros((self.deep_gp.n_dof, its))
+            self.u0_array = np.zeros((self.deep_gp.n_dof, its))
 
     def set_up_progress_bar(self, its):
         format_custom_text = progressbar.FormatCustomText(format='Acceptance rate: %(acc).2f', mapping=dict(acc=0.0))
