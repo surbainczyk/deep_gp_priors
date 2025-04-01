@@ -5,6 +5,7 @@ from pCN_det_free_fractional.GP_models.GPLayer import GPLayer
 from plotting import save_flattened_image
 
 
+# Script for plotting sample of 2-layer deep Gaussian process
 F_minus = 50
 F_plus = 100 ** 2
 a = 1500

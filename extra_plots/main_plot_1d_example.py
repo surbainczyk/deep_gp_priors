@@ -10,6 +10,7 @@ plt.rc('ytick', labelsize=16)
 plt.rc('legend', fontsize=16)
 
 
+# Script for plotting example of how a stationary correlation length fails to represent a 1D signal
 def matern_kernel(r, nu, rho):
     kappa = np.sqrt(2 * nu) / rho
     b = modified_bessel(nu, kappa * abs(r))
