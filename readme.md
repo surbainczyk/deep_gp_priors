@@ -4,7 +4,7 @@ This repository contains code to run the experiments in our preprint at https://
 
 The dependencies can be installed with
 ```
-conda install -c conda-forge python=3.11 numpy=1.24 fenics numba sparse_dot_mkl=0.9 matplotlib pandas scikit-sparse progressbar2 scikit-image
+conda install -c conda-forge python=3.11 numpy=1.24 fenics numba sparse_dot_mkl=0.9 matplotlib pandas scikit-sparse progressbar2 scikit-image arviz
 ```
 The install can take some time, so it might make sense to split this list into chunks. The version numbers ensure compatibility of the Python packages.
 

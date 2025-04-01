@@ -7,6 +7,7 @@ from skimage.metrics import mean_squared_error, peak_signal_noise_ratio, structu
 
 from forward_operators import apply_forward_operator
 from plotting import plot_comparison_result
+from ESSEstimator import ESSEstimator
 
 
 def plot_from_ind_results(alpha_vals, iter_counts, plots_dir):
@@ -55,6 +56,94 @@ def plot_from_ind_results(alpha_vals, iter_counts, plots_dir):
     plot_comparison_result(errors_dict, run_times_dict, plots_dir)
 
     print("Finished.")
+
+
+def print_ess_values(alpha_vals, plots_dir):
+    print('Computing ESS values...')
+    for alpha in alpha_vals:
+        id_no = 0
+        prop_list = []
+        u0_list = []
+        ess_prop_list = []
+        ess_u0_list = []
+
+        while True:
+            iterates_file = plots_dir + f"ind_iterates_a{alpha:.1f}_{id_no}.pickle"
+            try:
+                with open(iterates_file, 'rb') as iterates_f:
+                    iterates_obj = pickle.load(iterates_f)
+            except FileNotFoundError:
+                break
+
+            (prop_array, u0_array) = iterates_obj
+            prop_list.append(prop_array.T)
+            u0_list.append(u0_array.T)
+            ess_prop_list.append(compute_ess_values(prop_array.T))
+            ess_u0_list.append(compute_ess_values(u0_array.T))
+
+            id_no += 1
+        
+        print(f'ESS values for alpha={alpha}:')
+        print_variable_ess_values(ess_prop_list, name='proposal')
+        print_variable_ess_values(ess_u0_list, name='u0')
+    
+    print('Finished computing ESS values.')
+
+
+def compute_ess_values(data):
+    ess_estimator = ESSEstimator()
+
+    ess = ess_estimator.compute_lugsail_ess(data, use_bm_estimator=True)
+    min_lug_ess, med_lug_ess = ess_estimator.compute_smallest_lugsail_ess(data)
+    min_ess, med_ess = ess_estimator.compute_smallest_ess(data)
+
+    ess_dict = {'lugsail': ess,
+                'lugsail scalar min': min_lug_ess,
+                'lugsail scalar med': med_lug_ess,
+                'standard scalar min': min_ess,
+                'standard scalar med': med_ess}
+
+    return ess_dict
+
+
+def compute_ess_values_multichain(data_list):
+    ess_estimator = ESSEstimator()
+
+    ess = ess_estimator.compute_lugsail_ess_multichain(data_list, use_bm_estimator=True)
+    min_lug_ess, med_lug_ess = ess_estimator.compute_smallest_lugsail_ess_multichain(data_list)
+    min_ess, med_ess = ess_estimator.compute_smallest_ess_multichain(data_list)
+
+    ess_dict = {'lugsail': ess,
+                'lugsail scalar min': min_lug_ess,
+                'lugsail scalar med': med_lug_ess,
+                'standard scalar min': min_ess,
+                'standard scalar med': med_ess}
+
+    return ess_dict
+
+
+def get_min_mean_max_from_ess_vals(ess_list, key):
+    min_val  = np.amin([e[key] for e in ess_list])
+    mean_val = np.mean([e[key] for e in ess_list])
+    max_val  = np.amax([e[key] for e in ess_list])
+
+    return min_val, mean_val, max_val
+
+
+def print_variable_ess_values(ess_list, name):
+    print(4*' ' + f'Single-chain statistics for {name}:')
+    min_val, mean_val, max_val = get_min_mean_max_from_ess_vals(ess_list, 'lugsail')
+    print(8*' ' + f'Multivariate lugsail: {min_val:>6.2f} (min) {mean_val:>6.2f} (mean) {max_val:>6.2f} (max)')
+    min_val, mean_val, max_val = get_min_mean_max_from_ess_vals(ess_list, 'lugsail scalar min')
+    print(8*' ' + f'Minimum lugsail:      {min_val:>6.2f} (min) {mean_val:>6.2f} (mean) {max_val:>6.2f} (max)')
+    min_val, mean_val, max_val = get_min_mean_max_from_ess_vals(ess_list, 'standard scalar min')
+    print(8*' ' + f'Minimum classical:    {min_val:>6.2f} (min) {mean_val:>6.2f} (mean) {max_val:>6.2f} (max)')
+
+    print(4*' ' + f'Multi-chain statistics for {name}:')
+    ess_dict = compute_ess_values_multichain(ess_list)
+    print(8*' ' + f'Multivariate lugsail: {ess_dict['lugsail']:>6.2f}')
+    print(8*' ' + f'Minimum lugsail:      {ess_dict['lugsail scalar min']}     Median lugsail:   {ess_dict['lugsail scalar med']}')
+    print(8*' ' + f'Minimum classical:    {ess_dict['standard scalar min']}    Median classical: {ess_dict['standard scalar med']}\n')
 
 
 def compute_errors(regr_results, true_img, iter_counts):
