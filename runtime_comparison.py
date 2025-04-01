@@ -141,9 +141,9 @@ def print_variable_ess_values(ess_list, name):
 
     print(4*' ' + f'Multi-chain statistics for {name}:')
     ess_dict = compute_ess_values_multichain(ess_list)
-    print(8*' ' + f'Multivariate lugsail: {ess_dict['lugsail']:>6.2f}')
-    print(8*' ' + f'Minimum lugsail:      {ess_dict['lugsail scalar min']}     Median lugsail:   {ess_dict['lugsail scalar med']}')
-    print(8*' ' + f'Minimum classical:    {ess_dict['standard scalar min']}    Median classical: {ess_dict['standard scalar med']}\n')
+    print(8*' ' + f'Multivariate lugsail: {ess_dict["lugsail"]:>6.2f}')
+    print(8*' ' + f'Minimum lugsail:      {ess_dict["lugsail scalar min"]}     Median lugsail:   {ess_dict["lugsail scalar med"]}')
+    print(8*' ' + f'Minimum classical:    {ess_dict["standard scalar min"]}    Median classical: {ess_dict["standard scalar med"]}\n')
 
 
 def compute_errors(regr_results, true_img, iter_counts):
