@@ -83,9 +83,12 @@ def print_ess_values(alpha_vals, plots_dir):
 
             id_no += 1
         
+        ess_prop_mult = compute_ess_values_multichain(prop_list)
+        ess_u0_mult = compute_ess_values_multichain(u0_list)
+        
         print(f'ESS values for alpha={alpha}:')
-        print_variable_ess_values(ess_prop_list, name='proposal')
-        print_variable_ess_values(ess_u0_list, name='u0')
+        print_variable_ess_values(ess_prop_list, ess_prop_mult, name='proposal')
+        print_variable_ess_values(ess_u0_list, ess_u0_mult, name='u0')
     
     print('Finished computing ESS values.')
 
@@ -130,7 +133,7 @@ def get_min_mean_max_from_ess_vals(ess_list, key):
     return min_val, mean_val, max_val
 
 
-def print_variable_ess_values(ess_list, name):
+def print_variable_ess_values(ess_list, ess_mult, name):
     print(4*' ' + f'Single-chain statistics for {name}:')
     min_val, mean_val, max_val = get_min_mean_max_from_ess_vals(ess_list, 'lugsail')
     print(8*' ' + f'Multivariate lugsail: {min_val:>6.2f} (min) {mean_val:>6.2f} (mean) {max_val:>6.2f} (max)')
@@ -140,10 +143,9 @@ def print_variable_ess_values(ess_list, name):
     print(8*' ' + f'Minimum classical:    {min_val:>6.2f} (min) {mean_val:>6.2f} (mean) {max_val:>6.2f} (max)')
 
     print(4*' ' + f'Multi-chain statistics for {name}:')
-    ess_dict = compute_ess_values_multichain(ess_list)
-    print(8*' ' + f'Multivariate lugsail: {ess_dict["lugsail"]:>6.2f}')
-    print(8*' ' + f'Minimum lugsail:      {ess_dict["lugsail scalar min"]}     Median lugsail:   {ess_dict["lugsail scalar med"]}')
-    print(8*' ' + f'Minimum classical:    {ess_dict["standard scalar min"]}    Median classical: {ess_dict["standard scalar med"]}\n')
+    print(8*' ' + f'Multivariate lugsail: {ess_mult["lugsail"]:>6.2f}')
+    print(8*' ' + f'Minimum lugsail:      {ess_mult["lugsail scalar min"]}     Median lugsail:   {ess_mult["lugsail scalar med"]}')
+    print(8*' ' + f'Minimum classical:    {ess_mult["standard scalar min"]}    Median classical: {ess_mult["standard scalar med"]}\n')
 
 
 def compute_errors(regr_results, true_img, iter_counts):
