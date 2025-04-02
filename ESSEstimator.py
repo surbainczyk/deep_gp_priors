@@ -68,8 +68,11 @@ class ESSEstimator:
         mean_mat = np.zeros((a, samples))
         for k in range(a):
             mean_mat[k, (k * b):((k+1) * b)] = 1 / b
-        shifted_batch_list = [mean_mat @ shifted_chain for shifted_chain in shifted_chain_list]
-        mean_prod = np.sum([shifted_batch.T @ shifted_batch for shifted_batch in shifted_batch_list], axis=0)
+        
+        mean_prod = np.zeros((dim, dim))
+        for shifted_chain in shifted_chain_list:
+            shifted_batch = mean_mat @ shifted_chain
+            mean_prod += shifted_batch.T @ shifted_batch
         T_hat_b = b / (a * len(chain_list) - 1) * mean_prod
 
         if use_bm_estimator:
@@ -82,8 +85,11 @@ class ESSEstimator:
             mean_mat_bb = np.zeros((3 * a, samples))
             for k in range(3 * a):
                 mean_mat_bb[k, (k * b_by_three):((k+1) * b_by_three)] = 1 / b_by_three
-            shifted_batch_list_bb = [mean_mat_bb @ shifted_chain for shifted_chain in shifted_chain_list]
-            mean_prod_bb = np.sum([shifted_batch_bb.T @ shifted_batch_bb for shifted_batch_bb in shifted_batch_list_bb], axis=0)
+            
+            mean_prod_bb = np.zeros((dim, dim))
+            for shifted_chain in shifted_chain_list:
+                shifted_batch_bb = mean_mat_bb @ shifted_chain
+                mean_prod_bb += shifted_batch_bb.T @ shifted_batch_bb
             T_hat_bb = b_by_three / (3 * a * len(chain_list) - 1) * mean_prod_bb
 
             T_hat = 2 * T_hat_b - T_hat_bb
@@ -139,7 +145,7 @@ class ESSEstimator:
         return smallest_ess, median_ess
 
     def compute_smallest_lugsail_ess_multichain(self, chain_list):
-        samples, _ = chain_list[0].shape
+        samples, dim = chain_list[0].shape
 
         mu = np.mean([np.mean(chain, axis=0) for chain in chain_list], axis=0)
 
@@ -152,15 +158,21 @@ class ESSEstimator:
         mean_mat_b = np.zeros((a, samples))
         for k in range(a):
             mean_mat_b[k, (k * b):((k+1) * b)] = 1 / b
-        shifted_batch_list = [mean_mat_b @ shifted_chain for shifted_chain in shifted_chain_list]
-        sum_prod = np.sum([np.sum(shifted_batch ** 2, axis=0) for shifted_batch in shifted_batch_list], axis=0)
+        
+        sum_prod = np.zeros(dim)
+        for shifted_chain in shifted_chain_list:
+            shifted_batch = mean_mat_b @ shifted_chain
+            sum_prod += np.sum(shifted_batch ** 2, axis=0)
         tau_b = b * (a * len(chain_list) - 1) * sum_prod
         
         mean_mat_bb = np.zeros((3 * a, samples))
         for k in range(3 * a):
             mean_mat_bb[k, (k * b_by_three):((k+1) * b_by_three)] = 1 / b_by_three
-        shifted_batch_list_bb = [mean_mat_bb @ shifted_chain for shifted_chain in shifted_chain_list]
-        sum_prod_bb = np.sum([np.sum(shifted_batch_bb ** 2, axis=0) for shifted_batch_bb in shifted_batch_list_bb], axis=0)
+        
+        sum_prod_bb = np.zeros(dim)
+        for shifted_chain in shifted_chain_list:
+            shifted_batch_bb = mean_mat_bb @ shifted_chain
+            sum_prod_bb += np.sum(shifted_batch_bb ** 2, axis=0)
         tau_bb = b_by_three / (3 * a * len(chain_list) - 1) * sum_prod_bb
 
         tau_L = 2 * tau_b - tau_bb
