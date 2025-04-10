@@ -63,32 +63,25 @@ def print_ess_values(alpha_vals, plots_dir):
     for alpha in alpha_vals:
         id_no = 0
         prop_list = []
-        u0_list = []
         ess_prop_list = []
-        ess_u0_list = []
 
         while True:
-            iterates_file = plots_dir + f"ind_iterates_a{alpha:.1f}_{id_no}.pickle"
+            iterates_file = plots_dir + f"ind_iterates_a{alpha:.1f}_{id_no}.npz"
             try:
-                with open(iterates_file, 'rb') as iterates_f:
-                    iterates_obj = pickle.load(iterates_f)
+                data = np.load(iterates_file)
+                prop_array = data['prop_array']
             except FileNotFoundError:
                 break
 
-            (prop_array, u0_array) = iterates_obj
             prop_list.append(prop_array.T)
-            u0_list.append(u0_array.T)
             ess_prop_list.append(compute_ess_values(prop_array.T))
-            ess_u0_list.append(compute_ess_values(u0_array.T))
 
             id_no += 1
         
         ess_prop_mult = compute_ess_values_multichain(prop_list)
-        ess_u0_mult = compute_ess_values_multichain(u0_list)
         
         print(f'ESS values for alpha={alpha}:')
         print_variable_ess_values(ess_prop_list, ess_prop_mult, name='proposal')
-        print_variable_ess_values(ess_u0_list, ess_u0_mult, name='u0')
     
     print('Finished computing ESS values.')
 
@@ -223,7 +216,7 @@ def run_ind_experiment(DeepGPClass, MCMCSolverClass, parameters, iter_counts, id
     alpha = parameters['alpha']
     save_ind_result(mcmc_solver, true_img, iter_counts, alpha, scale, shift,
                     plots_dir + f"ind_result_a{alpha:.1f}_{id_no}.pickle")
-    save_mcmc_iterates(mcmc_solver, plots_dir + f"ind_iterates_a{alpha:.1f}_{id_no}.pickle")
+    save_mcmc_iterates(mcmc_solver, plots_dir + f"ind_iterates_a{alpha:.1f}_{id_no}.npz")
     save_run_times_dict(mcmc_solver, iter_counts, plots_dir + f"ind_run_times_a{alpha:.1f}_{id_no}.pickle")
 
     print("Finished. The time is:")
@@ -251,11 +244,9 @@ def save_ind_result(mcmc_solver, true_img, iter_counts, alpha, scale, shift, pck
     print(f"Saved results to: {pck_save_as}")
 
 
-def save_mcmc_iterates(mcmc_solver, pck_save_as):
-    pck_obj = (mcmc_solver.prop_array, mcmc_solver.u0_array)
-    with open(pck_save_as, 'wb') as f:
-        pickle.dump(pck_obj, f, protocol=pickle.HIGHEST_PROTOCOL)
-    print(f"Saved MCMC iterates to: {pck_save_as}")
+def save_mcmc_iterates(mcmc_solver, npz_save_as):
+    np.savez_compressed(npz_save_as, prop_array=mcmc_solver.prop_array)
+    print(f"Saved MCMC iterates to: {npz_save_as}")
 
 
 def save_run_times_dict(mcmc_solver, iter_counts, pck_save_as):

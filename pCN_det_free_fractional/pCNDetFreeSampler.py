@@ -97,7 +97,6 @@ class pCNDetFreeSampler:
 
             if store_iterates:
                 self.prop_array[:, i] = old_proposal
-                self.u0_array[:, i] = old_u
 
             if i >= burn_in:
                 self.update_mcmc_statistics(old_u, old_diag)
@@ -134,7 +133,6 @@ class pCNDetFreeSampler:
 
         if store_iterates:
             self.prop_array = np.zeros((self.deep_gp.n_dof, its))
-            self.u0_array = np.zeros((self.deep_gp.n_dof, its))
     
     def set_up_progress_bar(self, its):
         format_custom_text = progressbar.FormatCustomText(format='Acceptance rate: %(acc).2f', mapping=dict(acc=0.0))
