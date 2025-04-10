@@ -137,8 +137,8 @@ def print_variable_ess_values(ess_list, ess_mult, name):
 
     print(4*' ' + f'Multi-chain statistics for {name}:')
     print(8*' ' + f'Multivariate lugsail: {ess_mult["lugsail"]:>6.2f}')
-    print(8*' ' + f'Minimum lugsail:      {ess_mult["lugsail scalar min"]}     Median lugsail:   {ess_mult["lugsail scalar med"]}')
-    print(8*' ' + f'Minimum classical:    {ess_mult["standard scalar min"]}    Median classical: {ess_mult["standard scalar med"]}\n')
+    print(8*' ' + f'Minimum lugsail:      {ess_mult["lugsail scalar min"]:>6.2f}     Median lugsail:   {ess_mult["lugsail scalar med"]:>6.2f}')
+    print(8*' ' + f'Minimum classical:    {ess_mult["standard scalar min"]:>6.2f}    Median classical: {ess_mult["standard scalar med"]:>6.2f}\n')
 
 
 def compute_errors(regr_results, true_img, iter_counts):
