@@ -10,8 +10,7 @@ from pCN_det_free_fractional.pCNDetFreeSampler import pCNDetFreeSampler
 from pCN_nonfractional.GP_models.StandardGP import StandardGP
 from utils import (estimate_corr_length, compute_statistics, augment_edge_statistics,
                    print_and_save_label_errs, save_statistics)
-from plotting import (plot_edge_reconstruction_result, save_flattened_image, save_flattened_image_with_obs_locations,
-                      save_image_with_errors, plot_potential_values, plot_acceptance_history, plot_edge_errors)
+from plotting import *
 
 
 def initialise_deep_gp_and_sampler(params):
@@ -44,14 +43,22 @@ def run_edge_experiment(parameters):
     print("Parameters:")
     pprint.pprint(parameters)
 
-    keys = ["n_dof", "true_img", "true_edges", "forward_op", "obs", "obs_noise_std", "rho_vals", "its", "burn_in", "plot_obs", "plots_dir"]
-    (n_dof, true_img, true_edges, forward_op, obs, obs_noise_std, rho_vals, its, burn_in, plot_obs, plots_dir) = [parameters[key] for key in keys]
+    keys = ["n_dof", "true_img", "true_edges", "forward_op", "obs", "obs_noise_std",
+            "rho_vals", "its", "burn_in", "plot_obs", "plot_uq", "plots_dir"]
+    (n_dof, true_img, true_edges, forward_op, obs, obs_noise_std,
+     rho_vals, its, burn_in, plot_obs, plot_uq, plots_dir) = [parameters[key] for key in keys]
 
     deep_gp, mcmc_solver = initialise_deep_gp_and_sampler(parameters)
     mcmc_solver.initialise_observations(obs, forward_op, obs_noise_std)
 
     print("Running MCMC...")
-    mcmc_solver.run_mcmc(its=its, burn_in=burn_in, initial_state=None, beta=0.005, accept_rate=0.25, beta_split=int(its / 1000))
+    mcmc_solver.run_mcmc(its=its, burn_in=burn_in, initial_state=None, beta=0.005, accept_rate=0.25,
+                         beta_split=int(its / 1000), store_iterates=plot_uq)
+    if plot_uq:
+        npz_save_as = plots_dir + "iterates.npz"
+        np.savez_compressed(npz_save_as, prop_array=mcmc_solver.prop_array)
+        print(f"Saved MCMC iterates to: {npz_save_as}")
+    
     statistics = compute_statistics(mcmc_solver, n_dof)
 
     print("Computing additional statistics...")
@@ -104,6 +111,9 @@ def run_edge_experiment(parameters):
         plot_potential_values(mcmc_solver.proposals_array[middle_idx, :], plots_dir + "trace_of_proposal.pdf", logscale=False)
     except AttributeError:
         pass
+
+    if plot_uq:
+        plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir)
 
     print("Finished. The time is:")
     print(str(datetime.now()).split(".")[0])

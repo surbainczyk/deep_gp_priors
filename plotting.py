@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage.metrics import mean_squared_error, peak_signal_noise_ratio, structural_similarity
 
-from utils import line_location, classification_error, H_1_error
+from utils import line_location, classification_error, H_1_error, threshold
 
 
 plt.rcParams['figure.dpi'] = 600
@@ -741,3 +741,51 @@ def plot_edge_reconstruction_result(stats, save_as, edge_coords=None, avoid_oom=
 
         plt.savefig(save_as, bbox_inches="tight")
         plt.close()
+
+
+def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5):
+    # compute edge map samples
+    edge_samples = []
+    for i in range(burn_in, mcmc_solver.prop_array.shape[1]):
+        # get top layer mean
+        xi = mcmc_solver.prop_array[:, i]
+
+        if mcmc_solver.__class__.__name__ == 'pCNSampler':
+            _, Q, middle_mat, log_det_QDQ, _ = mcmc_solver.deep_gp.evaluate(xi)
+            _, regr_mean = mcmc_solver.potential_and_regression(Q, log_det_QDQ, middle_mat)
+        else:
+            _, __, diag = mcmc_solver.deep_gp.evaluate(xi, np.zeros_like(xi))
+            regr_mean = mcmc_solver.regression(diag)
+
+        # compute edge map and append
+        class_result = threshold(regr_mean)
+        edge_samples.append(class_result)
+
+    # plot edge map sample mean and marginal variance
+    edges_mean = np.mean(edge_samples, axis=0)
+    edges_mvar = np.var(edge_samples, axis=0)
+    edges_q05  = np.quantile(edge_samples, q=0.05, axis=0)
+    edges_q95  = np.quantile(edge_samples, q=0.95, axis=0)
+    save_flattened_image(edges_mean, plots_dir + 'uq_edges_mean.pdf')
+    save_flattened_image(edges_mvar, plots_dir + 'uq_edges_mvar.pdf')
+
+    # plot slice of edge map with true image and quantiles
+    width = int(np.sqrt(len(regr_mean)))
+    slice_idx = int(slice_at * width)
+    slice = edges_mean.reshape((width, width))[slice_idx, :]
+    slice_q05 = edges_q05.reshape((width, width))[slice_idx, :]
+    slice_q95 = edges_q95.reshape((width, width))[slice_idx, :]
+
+    true_slice = true_img.reshape((width, width))[slice_idx, :]
+
+    plt.style.use('seaborn-v0_8-ticks')
+
+    plt.figure(figsize=(3.73, 2.8))
+    plt.plot(np.linspace(0, 1, slice.size), slice, label='mean class.')
+    plt.fill_between(np.linspace(0, 1, slice.size), slice_q05, slice_q95, alpha=0.2)
+    plt.plot(np.linspace(0, 1, slice.size), true_slice, color='k', label='ground truth')
+
+    plt.legend()
+    plt.ylabel(r"Thresh. value")
+    plt.savefig(plots_dir + "uq_edges_slice.pdf", bbox_inches="tight")
+    plt.close()

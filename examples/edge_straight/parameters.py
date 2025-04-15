@@ -49,4 +49,5 @@ parameters = {"n_dof": n_dof,
               "burn_in": int(1e4),
               "fix_precond": 100,
               "plot_obs": True,
+              "plot_uq": True,
               "set_vrange": False}
