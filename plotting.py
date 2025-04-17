@@ -743,31 +743,35 @@ def plot_edge_reconstruction_result(stats, save_as, edge_coords=None, avoid_oom=
         plt.close()
 
 
-def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5):
+def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5, figsize=(2.8, 2.8), class_samples=None):
     # compute edge map samples
-    edge_samples = []
-    for i in range(burn_in, mcmc_solver.prop_array.shape[1]):
-        # get top layer mean
-        xi = mcmc_solver.prop_array[:, i]
+    if class_samples is None:
+        class_samples = []
+        for i in range(burn_in, mcmc_solver.prop_array.shape[1]):
+            # get top layer mean
+            xi = mcmc_solver.prop_array[:, i]
 
-        if mcmc_solver.__class__.__name__ == 'pCNSampler':
-            _, Q, middle_mat, log_det_QDQ, _ = mcmc_solver.deep_gp.evaluate(xi)
-            _, regr_mean = mcmc_solver.potential_and_regression(Q, log_det_QDQ, middle_mat)
-        else:
-            _, __, diag = mcmc_solver.deep_gp.evaluate(xi, np.zeros_like(xi))
-            regr_mean = mcmc_solver.regression(diag)
+            if mcmc_solver.__class__.__name__ == 'pCNSampler':
+                _, Q, middle_mat, log_det_QDQ, _ = mcmc_solver.deep_gp.evaluate(xi)
+                _, regr_mean = mcmc_solver.potential_and_regression(Q, log_det_QDQ, middle_mat)
+            else:
+                _, __, diag = mcmc_solver.deep_gp.evaluate(xi, np.zeros_like(xi))
+                regr_mean = mcmc_solver.regression(diag)
 
-        # compute edge map and append
-        class_result = threshold(regr_mean)
-        edge_samples.append(class_result)
+            # compute edge map and append
+            class_result = threshold(regr_mean)
+            class_samples.append(class_result)
+        
+        # save classification result samples
+        np.savez_compressed(plots_dir + 'class_samples', class_samples=np.array(class_samples))
 
     # plot edge map sample mean and marginal variance
-    edges_mean = np.mean(edge_samples, axis=0)
-    edges_mvar = np.var(edge_samples, axis=0)
-    edges_q05  = np.quantile(edge_samples, q=0.05, axis=0)
-    edges_q95  = np.quantile(edge_samples, q=0.95, axis=0)
-    save_flattened_image(edges_mean, plots_dir + 'uq_edges_mean.pdf')
-    save_flattened_image(edges_mvar, plots_dir + 'uq_edges_mvar.pdf')
+    edges_mean = np.mean(class_samples, axis=0)
+    edges_mvar = np.var(class_samples, axis=0)
+    edges_q05  = np.quantile(class_samples, q=0.05, axis=0)
+    edges_q95  = np.quantile(class_samples, q=0.95, axis=0)
+    save_flattened_image(edges_mean, plots_dir + 'uq_edges_mean.pdf', figsize=figsize)
+    save_flattened_image(edges_mvar, plots_dir + 'uq_edges_mvar.pdf', figsize=figsize)
 
     # plot slice of edge map with true image and quantiles
     width = int(np.sqrt(len(regr_mean)))
@@ -780,7 +784,7 @@ def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5
 
     plt.style.use('seaborn-v0_8-ticks')
 
-    plt.figure(figsize=(3.73, 2.8))
+    plt.figure(figsize=(4 / 3 * figsize[1], figsize[1]))
     plt.plot(np.linspace(0, 1, slice.size), slice, label='mean class.')
     plt.fill_between(np.linspace(0, 1, slice.size), slice_q05, slice_q95, alpha=0.2)
     plt.plot(np.linspace(0, 1, slice.size), true_slice, color='k', label='ground truth')

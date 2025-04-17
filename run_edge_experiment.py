@@ -113,7 +113,7 @@ def run_edge_experiment(parameters):
         pass
 
     if plot_uq:
-        plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir)
+        plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, figsize=figsize)
 
     print("Finished. The time is:")
     print(str(datetime.now()).split(".")[0])
