@@ -743,27 +743,30 @@ def plot_edge_reconstruction_result(stats, save_as, edge_coords=None, avoid_oom=
         plt.close()
 
 
-def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5, figsize=(2.8, 2.8), class_samples=None):
+def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5, figsize=(2.8, 2.8), top_layer_samples=None):
     # compute edge map samples
-    if class_samples is None:
+    if top_layer_samples is None:
+        top_layer_samples = []
         class_samples = []
+        dummy_var = np.zeros(mcmc_solver.prop_array.shape[0])
         for i in range(burn_in, mcmc_solver.prop_array.shape[1]):
             # get top layer mean
             xi = mcmc_solver.prop_array[:, i]
 
-            if mcmc_solver.__class__.__name__ == 'pCNSampler':
-                _, Q, middle_mat, log_det_QDQ, _ = mcmc_solver.deep_gp.evaluate(xi)
-                _, regr_mean = mcmc_solver.potential_and_regression(Q, log_det_QDQ, middle_mat)
-            else:
-                _, __, diag = mcmc_solver.deep_gp.evaluate(xi, np.zeros_like(xi))
-                regr_mean = mcmc_solver.regression(diag)
+            # we assume that mcmc_solver has method compute_top_layer_sample
+            _, __, diag = mcmc_solver.deep_gp.evaluate(xi, dummy_var)
+            top_sample = mcmc_solver.compute_top_layer_sample(diag)
+
+            top_layer_samples.append(top_sample)
 
             # compute edge map and append
-            class_result = threshold(regr_mean)
+            class_result = threshold(top_sample)
             class_samples.append(class_result)
         
         # save classification result samples
-        np.savez_compressed(plots_dir + 'class_samples', class_samples=np.array(class_samples))
+        np.savez_compressed(plots_dir + 'top_layer_samples', top_layer_samples=np.array(top_layer_samples))
+    else:
+        class_samples = [threshold(u) for u in top_layer_samples]
 
     # plot edge map sample mean and marginal variance
     edges_mean = np.mean(class_samples, axis=0)
@@ -774,7 +777,7 @@ def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5
     save_flattened_image(edges_mvar, plots_dir + 'uq_edges_mvar.pdf', figsize=figsize)
 
     # plot slice of edge map with true image and quantiles
-    width = int(np.sqrt(len(regr_mean)))
+    width = int(np.sqrt(len(top_sample)))
     slice_idx = int(slice_at * width)
     slice = edges_mean.reshape((width, width))[slice_idx, :]
     slice_q05 = edges_q05.reshape((width, width))[slice_idx, :]

@@ -7,6 +7,8 @@ from run_edge_experiment import initialise_deep_gp_and_sampler
 from plotting import *
 
 # Plot from files saved during previous run of main_edge_detection.py
+print("Start plotting. The time is:")
+print(str(datetime.now()).split(".")[0])
 
 plots_dir = "examples/edge_straight/plots/"
 
@@ -22,10 +24,10 @@ with open(plots_dir + 'stats.pickle', 'rb') as stats_f:
 with np.load(plots_dir + 'iterates.npz') as prop_f:
     mcmc_solver.prop_array = prop_f['prop_array']
 try:
-    with np.load(plots_dir + 'class_samples.npz') as class_f:
-        class_samples = class_f['class_samples']
+    with np.load(plots_dir + 'top_layer_samples.npz') as top_f:
+        top_layer_samples = top_f['top_layer_samples']
 except FileNotFoundError:
-    class_samples = None
+    top_layer_samples = None
 
 figsize = (2.8, 2.8)
 if plot_obs:
@@ -41,7 +43,7 @@ for key in keys:
 plot_edge_errors(statistics, plots_dir)
 
 if plot_uq:
-    plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, figsize=figsize, class_samples=class_samples)
+    plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, figsize=figsize, top_layer_samples=top_layer_samples)
 
 print("Finished. The time is:")
 print(str(datetime.now()).split(".")[0])

@@ -97,6 +97,15 @@ class FESolver:
 
         return rhs
     
+    def compute_random_rhs_inv_T(self, random_sample):
+        try:
+            rhs = self.sqrt_mass.T @ random_sample
+        except AttributeError:
+            self.compute_sqrt_mass_matrix()
+            rhs = self.sqrt_mass.T @ random_sample
+
+        return rhs
+    
     def compute_mass_matrix(self):
         a = self.u * self.v * dx
         A = assemble(a, tensor=EigenMatrix())
@@ -199,6 +208,23 @@ class FESolver:
 
         return sol
     
+    def solve_with_fractional_operator_inv_T(self, diag_vector, rhs_array):
+        operator_matrix = self.compute_operator_matrix(diag_vector)
+        sol = rhs_array
+
+        for _ in range(int(np.floor(self.fraction))):
+            try:
+                sol = self.mass_solve(sol)
+            except AttributeError:
+                self.compute_sqrt_mass_matrix()
+                sol = self.mass_solve(sol)
+            sol = operator_matrix @ sol
+
+        if self.frac_power != 0:
+            sol = self.solve_fractional_part_inv_T(operator_matrix, sol)
+
+        return sol
+    
     def solve_fractional_part(self, diag_vector, rhs_array):
         try:
             c_0, c, d = self.rational_approx.get_rational_approx_coeffs()
@@ -264,6 +290,30 @@ class FESolver:
             combined_sol = c_0 * rhs_array + np.sum(c[:, np.newaxis, np.newaxis] * shifted_sols, axis=0)
 
         return combined_sol
+    
+    def solve_fractional_part_inv_T(self, operator_matrix, rhs_array, reuse_chol=False):
+        try:
+            c_0, c, d = self.rational_approx.get_rational_approx_inv_coeffs()
+        except AttributeError:
+            self.rational_approx.compute_rat_function(self.frac_power)
+            c_0, c, d = self.rational_approx.get_rational_approx_inv_coeffs()
+
+        finished = False
+        if reuse_chol:
+            try:
+                shifted_sols = np.array([self.shifted_chol_factors[shift].solve_A(rhs_array) for shift in d])
+                finished = True
+            except KeyError:
+                pass
+        if not finished:
+            shifted_sols = np.array([self.shifted_solve(operator_matrix, shift, rhs_array) for shift in d])
+        if len(rhs_array.shape) == 1:
+            combined_sol = c @ shifted_sols
+        else:
+            combined_sol = np.sum(c[:, np.newaxis, np.newaxis] * shifted_sols, axis=0)
+        sol = c_0 * rhs_array + self.mass_matrix @ combined_sol
+
+        return sol
     
     def simple_solve(self, diag_vector, integrated_rhs):
         op_matrix = self.compute_operator_matrix(diag_vector)

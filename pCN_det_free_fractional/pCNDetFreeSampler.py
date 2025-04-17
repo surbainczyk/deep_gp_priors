@@ -205,6 +205,29 @@ class pCNDetFreeSampler:
 
         return regr_vals
     
+    def compute_top_layer_sample(self, diag):
+        tol = 1e-10
+
+        gp = self.deep_gp.top_layer
+        C = gp.apply_C
+
+        sol = self.old_solver.solve(diag, self.observed, tol=tol)
+        regr_mean = C(diag, self.A.T @ sol)
+
+        # compute covariance contribution of top layer sample
+        xi_1 = np.random.randn(self.observed.size)
+        sample_1 = self.A.T @ xi_1 / self.noise_std
+        xi_2 = np.random.randn(self.A.shape[1])
+        sample_2 = gp.evaluate_inv_T(diag, xi_2)
+        
+        prod_1 = C(diag, sample_1 + sample_2)
+        sol_2 = self.old_solver.solve(diag, self.A @ C(diag, sample_1 + sample_2), tol=tol)
+        prod_2 = C(diag, self.A.T @ sol_2)
+        
+        regr_cov_sample = prod_1 - prod_2
+
+        return regr_mean + regr_cov_sample
+    
     def update_mcmc_statistics(self, old_u, old_diag):
         self.stoch_counter += 1
         self.u_mean, self.u_sse = update_stochastics(old_u, self.u_mean, self.u_sse, self.stoch_counter)

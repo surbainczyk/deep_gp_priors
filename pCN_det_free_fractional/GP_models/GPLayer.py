@@ -78,6 +78,20 @@ class GPLayer:
         w = self.fe_solver.compute_random_rhs_inv(x)
 
         return w
+
+    def evaluate_inv_T(self, diag_vector, vec):
+        # solve for Gamma ^ {nu/2} * sigma
+        y = self.fe_solver.compute_random_rhs_inv_T(vec)
+
+        if len(vec.shape) == 1:
+            x = y / (self.sigma * diag_vector ** (self.nu / 2))
+        else:
+            x = y / (self.sigma * diag_vector[:, np.newaxis] ** (self.nu / 2))
+
+        # multiply with operator (P + Gamma).T
+        w = self.fe_solver.solve_with_fractional_operator_inv_T(diag_vector, x)
+
+        return w
     
     def apply_C(self, diag_vector, vec, fix_diag=False):
         # solve for operator (P + Gamma).T

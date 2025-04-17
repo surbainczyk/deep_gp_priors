@@ -47,20 +47,6 @@ class GPLayer:
         w = self.fe_solver.compute_random_rhs_T(x)
 
         return w
-
-    def evaluate_inv(self, diag_vector, vec):
-        # multiply with operator (P + Gamma)
-        y = self.fe_solver.solve_with_operator_inv(diag_vector, vec)
-
-        # solve for Gamma ^ {nu/2} * sigma
-        if len(vec.shape) == 1:
-            x = y / (self.sigma * diag_vector ** (self.nu / 2))
-        else:
-            x = y / (self.sigma * diag_vector[:, np.newaxis] ** (self.nu / 2))
-
-        w = self.fe_solver.compute_random_rhs_inv(x)
-
-        return w
     
     def compute_C_inv(self, diag_vector):
         diag_mat = eye(self.n_dof)
