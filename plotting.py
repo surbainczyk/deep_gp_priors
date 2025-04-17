@@ -758,15 +758,11 @@ def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5
             top_sample = mcmc_solver.compute_top_layer_sample(diag)
 
             top_layer_samples.append(top_sample)
-
-            # compute edge map and append
-            class_result = threshold(top_sample)
-            class_samples.append(class_result)
         
-        # save classification result samples
-        np.savez_compressed(plots_dir + 'top_layer_samples', top_layer_samples=np.array(top_layer_samples))
-    else:
-        class_samples = [threshold(u) for u in top_layer_samples]
+        # save top layer samples
+        np.savez_compressed(plots_dir + 'top_layer_samples.npz', top_layer_samples=np.array(top_layer_samples))
+    
+    class_samples = [threshold(u) for u in top_layer_samples]
 
     # plot edge map sample mean and marginal variance
     edges_mean = np.mean(class_samples, axis=0)
