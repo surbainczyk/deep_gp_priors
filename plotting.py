@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage.metrics import mean_squared_error, peak_signal_noise_ratio, structural_similarity
+from skimage import filters
 
-from utils import line_location, classification_error, H_1_error, threshold
+from utils import line_location, classification_error, H_1_error, threshold, threshold_with_length_scale
 
 
 plt.rcParams['figure.dpi'] = 600
@@ -12,7 +13,8 @@ plt.rc('ytick', labelsize=16)
 plt.rc('legend', fontsize=16)
 
 
-def save_flattened_image(img, save_as, shape=None, figsize=None, vrange=None, ticks_off=False, cbar_ticks=None, plot_cbar_to=None):
+def save_flattened_image(img, save_as, shape=None, figsize=None, vrange=None, ticks_off=False,
+                         cbar_ticks=None, plot_cbar_to=None):
     if shape is None:
         width = int(np.sqrt(img.size))
         shape = (width, width)
@@ -743,24 +745,36 @@ def plot_edge_reconstruction_result(stats, save_as, edge_coords=None, avoid_oom=
         plt.close()
 
 
-def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5, figsize=(2.8, 2.8), top_layer_samples=None):
+def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5, figsize=(2.8, 2.8),
+                         u0_samples=None, top_layer_samples=None):
     # compute edge map samples
+    recomp_top = top_layer_samples is None
+    recomp_u0  = u0_samples is None
+
     if top_layer_samples is None:
         top_layer_samples = []
-        class_samples = []
+    if u0_samples is None:
+        u0_samples = []
+    
+    if recomp_top or recomp_u0:
         dummy_var = np.zeros(mcmc_solver.prop_array.shape[0])
         for i in range(burn_in, mcmc_solver.prop_array.shape[1]):
-            # get top layer mean
             xi = mcmc_solver.prop_array[:, i]
 
             # we assume that mcmc_solver has method compute_top_layer_sample
-            _, __, diag = mcmc_solver.deep_gp.evaluate(xi, dummy_var)
-            top_sample = mcmc_solver.compute_top_layer_sample(diag)
-
-            top_layer_samples.append(top_sample)
+            u0, __, diag = mcmc_solver.deep_gp.evaluate(xi, dummy_var)
+            if recomp_u0:
+                u0_samples.append(u0)
+            if recomp_top:
+                top_sample = mcmc_solver.compute_top_layer_sample(diag)
+                top_layer_samples.append(top_sample)
         
+    if recomp_top:
         # save top layer samples
         np.savez_compressed(plots_dir + 'top_layer_samples.npz', top_layer_samples=np.array(top_layer_samples))
+    if recomp_u0:
+        # save u0 samples
+        np.savez_compressed(plots_dir + 'u0_samples.npz', u0_samples=np.array(u0_samples))
     
     class_samples = [threshold(u) for u in top_layer_samples]
 
@@ -772,8 +786,34 @@ def plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, slice_at=0.5
     save_flattened_image(edges_mean, plots_dir + 'uq_edges_mean.pdf', figsize=figsize)
     save_flattened_image(edges_mvar, plots_dir + 'uq_edges_mvar.pdf', figsize=figsize)
 
+    width = int(np.sqrt(len(class_samples[0])))
+    del class_samples
+    
+    max_samples = [threshold_with_length_scale(u_0) for u_0 in u0_samples]
+
+    # plot max. classification sample mean and marginal variance
+    max_mean = np.mean(max_samples, axis=0)
+    max_mvar = np.var(max_samples, axis=0)
+    save_flattened_image(max_mean, plots_dir + 'uq_max_mean.pdf', figsize=figsize)
+    save_flattened_image(max_mvar, plots_dir + 'uq_max_mvar.pdf', figsize=figsize)
+
+    sobel_samples = [filters.sobel(u.reshape(width, width)).flatten() for u in top_layer_samples]
+
+    # plot sobel filter sample mean and marginal variance
+    sobel_mean = np.mean(sobel_samples, axis=0)
+    sobel_mvar = np.var(sobel_samples, axis=0)
+    save_flattened_image(sobel_mean, plots_dir + 'uq_sobel_mean.pdf', figsize=figsize)
+    save_flattened_image(sobel_mvar, plots_dir + 'uq_sobel_mvar.pdf', figsize=figsize)
+
+    sobel_thresh_samples = [threshold(s, thresh=0.2, v_range=(0, 1)) for s in sobel_samples]
+
+    # plot thresholded sobel filter sample mean and marginal variance
+    sobel_thresh_mean = np.mean(sobel_thresh_samples, axis=0)
+    sobel_thresh_mvar = np.var(sobel_thresh_samples, axis=0)
+    save_flattened_image(sobel_thresh_mean, plots_dir + 'uq_sobel_thresh_mean.pdf', figsize=figsize)
+    save_flattened_image(sobel_thresh_mvar, plots_dir + 'uq_sobel_thresh_mvar.pdf', figsize=figsize)
+
     # plot slice of edge map with true image and quantiles
-    width = int(np.sqrt(len(top_sample)))
     slice_idx = int(slice_at * width)
     slice = edges_mean.reshape((width, width))[slice_idx, :]
     slice_q05 = edges_q05.reshape((width, width))[slice_idx, :]

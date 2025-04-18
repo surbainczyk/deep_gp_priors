@@ -6,7 +6,6 @@ import pickle
 from scipy.optimize import minimize_scalar
 from skimage import filters
 from skimage.metrics import mean_squared_error, peak_signal_noise_ratio, structural_similarity
-from scipy.ndimage import zoom
 
 
 @nb.njit((nb.i4[:], nb.i4[:], nb.f8[:]), parallel=True)

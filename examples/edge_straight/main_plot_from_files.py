@@ -28,6 +28,11 @@ try:
         top_layer_samples = top_f['top_layer_samples']
 except FileNotFoundError:
     top_layer_samples = None
+try:
+    with np.load(plots_dir + 'u0_samples.npz') as u0_f:
+        u0_samples = u0_f['u0_samples']
+except FileNotFoundError:
+    u0_samples = None
 
 figsize = (2.8, 2.8)
 if plot_obs:
@@ -43,7 +48,8 @@ for key in keys:
 plot_edge_errors(statistics, plots_dir)
 
 if plot_uq:
-    plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, figsize=figsize, top_layer_samples=top_layer_samples)
+    plot_edge_uq_results(true_img, mcmc_solver, burn_in, plots_dir, figsize=figsize,
+                         u0_samples=u0_samples, top_layer_samples=top_layer_samples)
 
 print("Finished. The time is:")
 print(str(datetime.now()).split(".")[0])
