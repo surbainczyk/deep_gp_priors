@@ -1,6 +1,6 @@
 # Deep Gaussian Process Priors for Bayesian Image Reconstruction
 
-This repository contains code to run the experiments in our preprint at https://arxiv.org/abs/2412.10248.
+This repository contains code to run the experiments in our article that can be downloaded at https://iopscience.iop.org/article/10.1088/1361-6420/add9be.
 
 The dependencies can be installed with
 ```
